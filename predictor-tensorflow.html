@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor ML - TensorFlow.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-layers@4.11.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #667eea;
+            color: #333;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        h2 {
+            color: #667eea;
+            margin: 20px 0 15px 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button.danger {
+            background: #e74c3c;
+        }
+
+        button.danger:hover {
+            background: #c0392b;
+        }
+
+        button.secondary {
+            background: #2ecc71;
+        }
+
+        button.secondary:hover {
+            background: #27ae60;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .prediction-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .prediction-card {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #fff;
+        }
+
+        .prediction-line {
+            font-size: 1.8em;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+
+        .confidence-bar {
+            background: rgba(255,255,255,0.3);
+            height: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #f39c12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75em;
+            transition: width 0.5s ease;
+        }
+
+        .analysis-text {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-family: monospace;
+        }
+
+        tr:hover {
+            background: #f0f0f0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin: 20px 0;
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: #ddd;
+            color: #333;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+
+        .success {
+            color: #27ae60;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .warning {
+            color: #f39c12;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #5568d3);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85em;
+        }
+
+        .stat-number {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+
+        .training-status {
+            background: #fff9e6;
+            border: 2px solid #f39c12;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .progress-bar {
+            background: #ddd;
+            height: 25px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75em;
+            transition: width 0.3s ease;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .model-info {
+            background: #e8f4f8;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Predictor ML - TensorFlow.js (Red Neuronal)</h1>
+        <p class="subtitle">Sistema de predicción con aprendizaje profundo - LSTM</p>
+
+        <!-- ESTADO DEL MODELO -->
+        <div class="section">
+            <h2>🤖 Estado del Modelo Neuronal</h2>
+            <div id="modelStatus">
+                <p>Estado: <strong>Sin modelo entrenado</strong></p>
+                <p>Líneas procesadas: <strong>0</strong></p>
+            </div>
+        </div>
+
+        <!-- ENTRADA HISTÓRICO -->
+        <div class="section">
+            <h2>📥 Agregar Líneas Históricas (para entrenar)</h2>
+            <label>Pega líneas históricas (una por línea, 14 caracteres cada una):</label>
+            <textarea id="historicLines" placeholder="Ejemplo:&#10;11122XX112X11&#10;22X112X211X122&#10;X12211X122X111&#10;(Mínimo 10 líneas para entrenar)"></textarea>
+            <button onclick="addHistoricLines()">➕ Agregar Líneas y Entrenar</button>
+            <div id="trainingStatus"></div>
+            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">💡 El modelo aprenderá los patrones de tus líneas históricas.</p>
+        </div>
+
+        <!-- PREDICCIÓN -->
+        <div class="section">
+            <h2>🎯 Predicción de la Siguiente Línea</h2>
+            <button onclick="generatePrediction()">🔮 Generar Predicción</button>
+            <div id="predictionDiv"></div>
+        </div>
+
+        <!-- ESTADÍSTICAS -->
+        <div class="section">
+            <h2>📈 Estadísticas Generales</h2>
+            <div id="generalStatsDiv"></div>
+        </div>
+
+        <!-- HISTÓRICO -->
+        <div class="section">
+            <h2>📋 Histórico de Líneas</h2>
+            <div id="historyDiv"></div>
+        </div>
+
+        <!-- PRUEBA DE PREDICCIÓN -->
+        <div class="section">
+            <h2>✅ Probar Predicción vs Real</h2>
+            <label>Pega líneas reales para comparar con las predicciones:</label>
+            <textarea id="testLines" placeholder="Ejemplo:&#10;X22X1X1XX12X22&#10;1X112XX1121X11"></textarea>
+            <button onclick="testPrediction()" class="secondary">✅ Probar</button>
+            <div id="testResultDiv"></div>
+        </div>
+
+        <!-- GRÁFICOS -->
+        <div class="section">
+            <h2>📊 Análisis Gráfico</h2>
+            <div class="chart-tabs">
+                <button class="tab-btn active" onclick="showChart('accuracy')">📊 Precisión</button>
+                <button class="tab-btn" onclick="showChart('deviations')">📉 Desvíos</button>
+            </div>
+            
+            <div class="chart-container" id="accuracyChart" style="display:block;">
+                <canvas id="accCanvas"></canvas>
+            </div>
+            
+            <div class="chart-container" id="deviationsChart" style="display:none;">
+                <canvas id="devCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- EXPORTAR -->
+        <div class="section">
+            <h2>💾 Exportar/Importar</h2>
+            <button onclick="exportData()">💾 Descargar Datos</button>
+            <button onclick="document.getElementById('importFile').click()">📂 Cargar Datos</button>
+            <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importData(event)">
+            <button onclick="clearAll()" class="danger">🗑️ Limpiar Todo</button>
+        </div>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // VARIABLES GLOBALES
+        let model = null;
+        let allLines = [];
+        let testResults = [];
+        let charts = {};
+        
+        const CHARS = ['1', '2', 'X'];
+        const SEQ_LENGTH = 5; // Usar últimas 5 líneas para predecir la siguiente
+
+        // ===== CODIFICAR CARÁCTER A NÚMERO =====
+        function charToNum(char) {
+            return CHARS.indexOf(char);
+        }
+
+        // ===== DECODIFICAR NÚMERO A CARÁCTER =====
+        function numToChar(num) {
+            return CHARS[Math.round(num)];
+        }
+
+        // ===== VALIDAR LÍNEA =====
+        function isValidLine(line) {
+            if (!line || line.length !== 14) return false;
+            return /^[1|2|X]{14}$/i.test(line.toUpperCase());
+        }
+
+        // ===== EXTRAER LÍNEAS =====
+        function extractLines(text) {
+            return text
+                .split(/[\n\r]+/)
+                .map(l => l.trim().toUpperCase())
+                .filter(l => isValidLine(l));
+        }
+
+        // ===== CREAR MODELO NEURONAL =====
+        async function createModel() {
+            model = tf.sequential({
+                layers: [
+                    tf.layers.lstm({ 
+                        units: 64, 
+                        inputShape: [SEQ_LENGTH, 14],
+                        returnSequences: true
+                    }),
+                    tf.layers.dropout({ rate: 0.2 }),
+                    tf.layers.lstm({ units: 32 }),
+                    tf.layers.dropout({ rate: 0.2 }),
+                    tf.layers.dense({ units: 64, activation: 'relu' }),
+                    tf.layers.dense({ units: 42, activation: 'softmax' }) // 14 posiciones * 3 caracteres
+                ]
+            });
+
+            model.compile({
+                optimizer: tf.train.adam(0.001),
+                loss: 'categoricalCrossentropy',
+                metrics: ['accuracy']
+            });
+
+            console.log('Modelo LSTM creado');
+        }
+
+        // ===== PREPARAR DATOS PARA ENTRENAMIENTO =====
+        function prepareTrainingData(lines) {
+            const xs = [];
+            const ys = [];
+
+            // Crear secuencias
+            for (let i = SEQ_LENGTH; i < lines.length; i++) {
+                const sequence = [];
+                
+                // Tomar últimas SEQ_LENGTH líneas
+                for (let j = i - SEQ_LENGTH; j < i; j++) {
+                    const line = lines[j];
+                    for (let k = 0; k < 14; k++) {
+                        sequence.push([charToNum(line[k])]);
+                    }
+                }
+
+                // Siguiente línea como target
+                const target = lines[i];
+                const targetEncoded = [];
+                for (let k = 0; k < 14; k++) {
+                    const vec = [0, 0, 0];
+                    vec[charToNum(target[k])] = 1;
+                    targetEncoded.push(...vec);
+                }
+
+                xs.push(sequence);
+                ys.push(targetEncoded);
+            }
+
+            return {
+                xs: tf.tensor3d(xs),
+                ys: tf.tensor2d(ys)
+            };
+        }
+
+        // ===== ENTRENAR MODELO =====
+        async function trainModel(lines) {
+            if (lines.length < SEQ_LENGTH + 2) {
+                showMessage('Necesitas al menos ' + (SEQ_LENGTH + 2) + ' líneas para entrenar', 'error');
+                return false;
+            }
+
+            try {
+                showMessage('⏳ Preparando datos...', 'warning');
+                
+                if (!model) {
+                    await createModel();
+                }
+
+                const { xs, ys } = prepareTrainingData(lines);
+
+                showMessage('🧠 Entrenando modelo (esto puede tardar)...', 'warning');
+
+                await model.fit(xs, ys, {
+                    epochs: 50,
+                    batchSize: 8,
+                    verbose: 0,
+                    shuffle: true
+                });
+
+                xs.dispose();
+                ys.dispose();
+
+                showMessage(`✅ Modelo entrenado con ${lines.length} líneas`, 'success');
+                updateModelStatus();
+                return true;
+
+            } catch (error) {
+                console.error('Error entrenando:', error);
+                showMessage('❌ Error al entrenar: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // ===== GENERAR PREDICCIÓN =====
+        async function generatePrediction() {
+            if (!model || allLines.length < SEQ_LENGTH) {
+                showMessage('Entrena el modelo primero', 'error');
+                return;
+            }
+
+            try {
+                const div = document.getElementById('predictionDiv');
+                div.innerHTML = '<div class="training-status">🔮 Generando predicción...<span class="loading"></span></div>';
+
+                // Tomar últimas SEQ_LENGTH líneas
+                const recentLines = allLines.slice(-SEQ_LENGTH);
+                const sequence = [];
+
+                for (let i = 0; i < SEQ_LENGTH; i++) {
+                    const line = recentLines[i];
+                    for (let k = 0; k < 14; k++) {
+                        sequence.push([charToNum(line[k])]);
+                    }
+                }
+
+                const input = tf.tensor3d([sequence]);
+                const output = model.predict(input);
+                const predictions = await output.data();
+
+                // Decodificar predicción
+                let predictionLine = '';
+                const confidences = [];
+
+                for (let pos = 0; pos < 14; pos++) {
+                    const start = pos * 3;
+                    const probs = [predictions[start], predictions[start + 1], predictions[start + 2]];
+                    const maxIdx = probs.indexOf(Math.max(...probs));
+                    const confidence = Math.round(probs[maxIdx] * 100);
+                    
+                    predictionLine += CHARS[maxIdx];
+                    confidences.push(confidence);
+                }
+
+                const avgConf = Math.round(confidences.reduce((a, b) => a + b, 0) / 14);
+
+                input.dispose();
+                output.dispose();
+
+                let html = `
+                    <div class="prediction-box">
+                        <div class="prediction-card">
+                            <div style="font-size: 0.9em; opacity: 0.8;">🔮 Predicción Neuronal</div>
+                            <div class="prediction-line">${predictionLine}</div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${avgConf}%">${avgConf}%</div>
+                            </div>
+                            <div class="analysis-text">
+                                Confianza Promedio: <strong>${avgConf}%</strong><br>
+                                Basada en modelo neuronal LSTM entrenado
+                            </div>
+                            <div style="font-size: 0.8em; margin-top: 10px; opacity: 0.8;">
+                                ${confidences.map((c, i) => `<span style="display:inline-block; margin: 3px 4px; padding: 4px 8px; background:rgba(255,255,255,0.2); border-radius:3px;">P${i+1}:${c}%</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                div.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error en predicción:', error);
+                showMessage('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // ===== PROBAR PREDICCIÓN =====
+        async function testPrediction() {
+            if (!model) {
+                showMessage('Entrena el modelo primero', 'error');
+                return;
+            }
+
+            const text = document.getElementById('testLines').value.trim();
+            const testLines = extractLines(text);
+
+            if (testLines.length === 0) {
+                showMessage('Por favor pega líneas válidas', 'error');
+                return;
+            }
+
+            try {
+                const div = document.getElementById('testResultDiv');
+                div.innerHTML = '<div class="training-status">⏳ Probando...<span class="loading"></span></div>';
+
+                let html = '<table><tr><th>Línea Real</th><th>Predicción</th><th>Acierto %</th></tr>';
+                
+                for (let testLine of testLines) {
+                    // Usar la línea anterior para predecir esta
+                    if (allLines.length < SEQ_LENGTH) continue;
+
+                    const recentLines = allLines.slice(-SEQ_LENGTH);
+                    const sequence = [];
+
+                    for (let i = 0; i < SEQ_LENGTH; i++) {
+                        const line = recentLines[i];
+                        for (let k = 0; k < 14; k++) {
+                            sequence.push([charToNum(line[k])]);
+                        }
+                    }
+
+                    const input = tf.tensor3d([sequence]);
+                    const output = model.predict(input);
+                    const predictions = await output.data();
+
+                    let predictionLine = '';
+                    for (let pos = 0; pos < 14; pos++) {
+                        const start = pos * 3;
+                        const probs = [predictions[start], predictions[start + 1], predictions[start + 2]];
+                        const maxIdx = probs.indexOf(Math.max(...probs));
+                        predictionLine += CHARS[maxIdx];
+                    }
+
+                    // Calcular acierto
+                    let matches = 0;
+                    for (let i = 0; i < 14; i++) {
+                        if (predictionLine[i] === testLine[i]) matches++;
+                    }
+                    const accuracy = Math.round((matches / 14) * 100);
+
+                    const resultClass = accuracy >= 70 ? 'success' : accuracy >= 50 ? 'warning' : 'error';
+                    html += `<tr><td>${testLine}</td><td>${predictionLine}</td><td class="${resultClass}">${accuracy}%</td></tr>`;
+
+                    testResults.push({ real: testLine, pred: predictionLine, accuracy });
+                    allLines.push(testLine);
+
+                    input.dispose();
+                    output.dispose();
+                }
+
+                html += '</table>';
+                div.innerHTML = html;
+
+                updateCharts();
+
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // ===== AGREGAR LÍNEAS HISTÓRICAS =====
+        async function addHistoricLines() {
+            const text = document.getElementById('historicLines').value.trim();
+            const newLines = extractLines(text);
+
+            if (newLines.length === 0) {
+                showMessage('No encontré líneas válidas', 'error');
+                return;
+            }
+
+            newLines.forEach(line => {
+                allLines.push(line);
+            });
+
+            document.getElementById('historicLines').value = '';
+            
+            showMessage(`✅ ${newLines.length} líneas agregadas. Entrenando modelo...`, 'success');
+            
+            const success = await trainModel(allLines);
+            if (success) {
+                updateUI();
+            }
+        }
+
+        // ===== ACTUALIZAR ESTADO DEL MODELO =====
+        function updateModelStatus() {
+            const div = document.getElementById('modelStatus');
+            const status = model ? '✅ Entrenado' : '❌ Sin entrenar';
+            div.innerHTML = `
+                <p>Estado: <strong>${status}</strong></p>
+                <p>Líneas procesadas: <strong>${allLines.length}</strong></p>
+                ${model ? '<div class="model-info">🧠 Red Neuronal LSTM con 64+32 unidades | Optimizador Adam</div>' : ''}
+            `;
+        }
+
+        // ===== ACTUALIZAR INTERFAZ =====
+        function updateUI() {
+            updateModelStatus();
+            updateGeneralStats();
+        }
+
+        function updateGeneralStats() {
+            const div = document.getElementById('generalStatsDiv');
+            const totalLines = allLines.length;
+            const totalTests = testResults.length;
+            const avgAccuracy = testResults.length > 0 ?
+                Math.round(testResults.reduce((sum, r) => sum + r.accuracy, 0) / testResults.length) : 0;
+
+            div.innerHTML = `
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Líneas Total</div>
+                        <div class="stat-number">${totalLines}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pruebas</div>
+                        <div class="stat-number">${totalTests}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Precisión Promedio</div>
+                        <div class="stat-number">${avgAccuracy}%</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== GRÁFICOS =====
+        function updateCharts() {
+            if (testResults.length === 0) return;
+
+            updateAccuracyChart();
+            updateDeviationsChart();
+        }
+
+        function updateAccuracyChart() {
+            const canvas = document.getElementById('accCanvas');
+            if (!canvas) return;
+
+            const labels = testResults.map((_, i) => `Test ${i + 1}`);
+            const data = testResults.map(r => r.accuracy);
+
+            if (charts.accuracy) charts.accuracy.destroy();
+
+            charts.accuracy = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Precisión %',
+                        data: data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            ticks: { callback: v => v + '%' }
+                        } 
+                    }
+                }
+            });
+        }
+
+        function updateDeviationsChart() {
+            const canvas = document.getElementById('devCanvas');
+            if (!canvas) return;
+
+            const labels = testResults.map((_, i) => `Test ${i + 1}`);
+            const deviations = testResults.map(r => 100 - r.accuracy);
+
+            if (charts.deviations) charts.deviations.destroy();
+
+            charts.deviations = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Desvío %',
+                        data: deviations,
+                        backgroundColor: deviations.map(d => d > 50 ? '#e74c3c' : d > 30 ? '#f39c12' : '#2ecc71')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            ticks: { callback: v => v + '%' }
+                        } 
+                    }
+                }
+            });
+        }
+
+        function showChart(type) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('accuracyChart').style.display = type === 'accuracy' ? 'block' : 'none';
+            document.getElementById('deviationsChart').style.display = type === 'deviations' ? 'block' : 'none';
+            setTimeout(() => {
+                if (charts[type]) charts[type].resize();
+            }, 100);
+        }
+
+        // ===== EXPORTAR DATOS =====
+        function exportData() {
+            const data = {
+                allLines: allLines,
+                testResults: testResults,
+                modelExists: model ? true : false,
+                exportDate: new Date().toLocaleString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `predictor-tensorflow-${Date.now()}.json`;
+            a.click();
+            showMessage('✅ Datos descargados', 'success');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    allLines = data.allLines || [];
+                    testResults = data.testResults || [];
+                    updateUI();
+                    showMessage('✅ Datos importados', 'success');
+                } catch (err) {
+                    showMessage('❌ Error al importar', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAll() {
+            if (confirm('¿Eliminar todo?')) {
+                allLines = [];
+                testResults = [];
+                model = null;
+                document.getElementById('historicLines').value = '';
+                document.getElementById('testLines').value = '';
+                updateUI();
+                showMessage('✅ Datos eliminados', 'success');
+            }
+        }
+
+        function showMessage(msg, type) {
+            const div = document.getElementById('message');
+            div.innerHTML = `<div class="info-box ${type}">${msg}</div>`;
+            setTimeout(() => { div.innerHTML = ''; }, 5000);
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🧠 TensorFlow.js iniciado');
+            updateUI();
+        });
+    </script>
+</body>
+</html>
