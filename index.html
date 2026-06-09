@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor Estadístico - ML Análisis</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <header class="header">
+            <h1>📊 Predictor Estadístico Inteligente</h1>
+            <p class="subtitle">Análisis ML de líneas de 14 posiciones (1, 2, X)</p>
+        </header>
+
+        <!-- PANEL PRINCIPAL -->
+        <div class="main-grid">
+            
+            <!-- SECCIÓN ENTRADA -->
+            <section class="section input-section">
+                <h2>📥 Entrada de Datos</h2>
+                
+                <div class="input-group">
+                    <label>Nueva línea de 14 signos (1, 2, X):</label>
+                    <input 
+                        type="text" 
+                        id="newLine" 
+                        class="input-line" 
+                        placeholder="Ej: 11122XX112X11"
+                        maxlength="14"
+                    >
+                    <button class="btn btn-primary" onclick="addLine()">➕ Agregar Línea</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Línea Real (después de predicción):</label>
+                    <input 
+                        type="text" 
+                        id="realLine" 
+                        class="input-line" 
+                        placeholder="Ej: 22X112X211X122"
+                        maxlength="14"
+                    >
+                    <button class="btn btn-secondary" onclick="registerReal()">✅ Registrar Real</button>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-danger" onclick="clearData()">🗑️ Limpiar Datos</button>
+                    <button class="btn btn-info" onclick="exportData()">💾 Descargar JSON</button>
+                </div>
+            </section>
+
+            <!-- SECCIÓN PREDICCIÓN -->
+            <section class="section prediction-section">
+                <h2>🎯 Predicción Siguiente Línea</h2>
+                
+                <div id="predictionResult" class="prediction-result">
+                    <p class="no-data">Agrega líneas para generar predicciones...</p>
+                </div>
+
+                <div id="predictionChart" class="chart-container" style="display:none;">
+                    <canvas id="predictionCanvas"></canvas>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- SECCIÓN HISTÓRICO -->
+        <section class="section history-section">
+            <h2>📋 Histórico de Líneas</h2>
+            <div class="history-controls">
+                <button class="btn btn-small" onclick="toggleHistory()">👁️ Mostrar/Ocultar</button>
+                <span class="counter">Total: <strong id="lineCount">0</strong> líneas</span>
+            </div>
+            <div id="historyContainer" class="history-container" style="display:none;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Línea</th>
+                            <th>Predicción Anterior</th>
+                            <th>Desvío %</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN ESTADÍSTICAS -->
+        <section class="section stats-section">
+            <h2>📈 Estadísticas por Posición</h2>
+            <div id="statsContainer" class="stats-grid">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </section>
+
+        <!-- SECCIÓN GRÁFICAS -->
+        <section class="section charts-section">
+            <h2>📊 Análisis Gráfico</h2>
+            
+            <div class="chart-tabs">
+                <button class="tab-btn active" onclick="showChart('deviations')">Desvíos Acumulados</button>
+                <button class="tab-btn" onclick="showChart('accuracy')">Precisión Histórica</button>
+                <button class="tab-btn" onclick="showChart('frequency')">Frecuencia por Posición</button>
+            </div>
+
+            <div id="deviationsChart" class="chart-wrapper">
+                <canvas id="deviationsCanvas"></canvas>
+            </div>
+            <div id="accuracyChart" class="chart-wrapper" style="display:none;">
+                <canvas id="accuracyCanvas"></canvas>
+            </div>
+            <div id="frequencyChart" class="chart-wrapper" style="display:none;">
+                <canvas id="frequencyCanvas"></canvas>
+            </div>
+        </section>
+
+        <!-- SECCIÓN ANÁLISIS SERIES -->
+        <section class="section series-section">
+            <h2>🔄 Análisis de Series (5-10 líneas)</h2>
+            <div class="series-analysis">
+                <div id="seriesResult" class="series-result">
+                    <p class="no-data">Se generará análisis con mínimo 5 líneas registradas...</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="footer">
+        <p>🚀 Predictor ML v1.0 | Análisis Estadístico Inteligente</p>
+    </footer>
+
+    <!-- SCRIPTS MODULARES -->
+    <script src="data-manager.js"></script>
+    <script src="ml-engine.js"></script>
+    <script src="charts-manager.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
