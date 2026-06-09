@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictor ML - Simple</title>
+    <title>Predictor ML - Avanzado</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
         * {
@@ -123,16 +123,50 @@
             color: white;
             padding: 20px;
             border-radius: 8px;
-            text-align: center;
             margin: 15px 0;
         }
 
+        .prediction-card {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #fff;
+        }
+
         .prediction-line {
-            font-size: 1.5em;
+            font-size: 1.8em;
             font-weight: bold;
             letter-spacing: 3px;
-            margin: 15px 0;
+            margin: 10px 0;
             font-family: monospace;
+        }
+
+        .confidence-bar {
+            background: rgba(255,255,255,0.3);
+            height: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #f39c12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75em;
+            transition: width 0.5s ease;
+        }
+
+        .analysis-text {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 8px;
+            line-height: 1.4;
         }
 
         table {
@@ -231,23 +265,42 @@
             opacity: 0.9;
         }
 
-        .grid-2 {
+        .rank-1 { border-left: 4px solid #f39c12; }
+        .rank-2 { border-left: 4px solid #95a5a6; }
+        .rank-3 { border-left: 4px solid #cd7f32; }
+
+        .position-analysis {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
         }
 
-        @media (max-width: 768px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
+        .pos-card {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #667eea;
+            font-size: 0.85em;
+        }
+
+        .pos-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .pos-options {
+            font-size: 0.75em;
+            line-height: 1.3;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Predictor ML - Análisis Estadístico</h1>
-        <p class="subtitle">Sistema de predicción y análisis de desviaciones</p>
+        <h1>📊 Predictor ML - Análisis Inteligente</h1>
+        <p class="subtitle">Sistema avanzado de predicción con análisis de tendencias y patrones</p>
 
         <!-- ENTRADA HISTÓRICO -->
         <div class="section">
@@ -255,7 +308,7 @@
             <label>Pega líneas históricas (una por línea, 14 caracteres cada una):</label>
             <textarea id="historicLines" placeholder="Ejemplo:&#10;11122XX112X11&#10;22X112X211X122&#10;X12211X122X111&#10;(Puedes pegar 50, 100 o las que necesites)"></textarea>
             <button onclick="addHistoricLines()">➕ Agregar Líneas Históricas</button>
-            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">💡 Estas serán el histórico base para calcular estadísticas y predicciones.</p>
+            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">💡 Estas serán el histórico base para calcular estadísticas y predicciones avanzadas.</p>
         </div>
 
         <!-- ENTRADA REALES NUEVAS -->
@@ -267,10 +320,16 @@
             <p style="font-size: 0.85em; color: #666; margin-top: 10px;">💡 Se calcularán los desvíos comparando con las predicciones generadas.</p>
         </div>
 
-        <!-- PREDICCIÓN -->
+        <!-- PREDICCIÓN MÚLTIPLE -->
         <div class="section">
-            <h2>🎯 Predicción Actual</h2>
+            <h2>🎯 Predicciones Principales</h2>
             <div id="predictionDiv"></div>
+        </div>
+
+        <!-- ANÁLISIS POR POSICIÓN -->
+        <div class="section">
+            <h2>🔍 Análisis Detallado por Posición</h2>
+            <div id="positionAnalysisDiv"></div>
         </div>
 
         <!-- ESTADÍSTICAS -->
@@ -297,6 +356,7 @@
             <div class="chart-tabs">
                 <button class="tab-btn active" onclick="showChart('frequency')">📊 Frecuencia por Posición</button>
                 <button class="tab-btn" onclick="showChart('deviations')">📉 Desvíos Históricos</button>
+                <button class="tab-btn" onclick="showChart('trend')">📈 Tendencia Reciente</button>
             </div>
             
             <div class="chart-container" id="frequencyChart" style="display:block;">
@@ -305,6 +365,10 @@
             
             <div class="chart-container" id="deviationsChart" style="display:none;">
                 <canvas id="devCanvas"></canvas>
+            </div>
+
+            <div class="chart-container" id="trendChart" style="display:none;">
+                <canvas id="trendCanvas"></canvas>
             </div>
         </div>
 
@@ -322,8 +386,8 @@
 
     <script>
         // DATOS UNIFICADOS
-        let allLines = []; // Todas las líneas (históricas + nuevas reales)
-        let deviations = []; // Desvíos calculados
+        let allLines = [];
+        let deviations = [];
         let charts = {};
 
         // ===== VALIDAR LÍNEA =====
@@ -334,7 +398,6 @@
 
         // ===== EXTRAER LÍNEAS DEL TEXTAREA =====
         function extractLines(text) {
-            // Separar por saltos de línea y espacios
             return text
                 .split(/[\n\r]+/)
                 .map(l => l.trim().toUpperCase())
@@ -391,19 +454,20 @@
                     timestamp: new Date().toLocaleTimeString()
                 });
 
-                // Calcular desvío si hay al menos una línea anterior
+                // Calcular desvío contra la mejor predicción
                 if (allLines.length > 1) {
-                    const lastHistoric = allLines.slice(0, -1).reverse().find(l => l.type === 'historic');
-                    if (lastHistoric) {
+                    const predictions = generateMultiplePredictions();
+                    if (predictions && predictions.length > 0) {
+                        const bestPred = predictions[0].line;
                         let matches = 0;
                         for (let i = 0; i < 14; i++) {
-                            if (lastHistoric.line[i] === line[i]) matches++;
+                            if (bestPred[i] === line[i]) matches++;
                         }
                         const deviation = Math.round((matches / 14) * 100);
                         deviations.push({
                             lineId: allLines.length - 1,
                             deviation: deviation,
-                            predicted: lastHistoric.line,
+                            predicted: bestPred,
                             real: line
                         });
                     }
@@ -415,48 +479,148 @@
             updateUI();
         }
 
-        // ===== GENERAR PREDICCIÓN =====
-        function generatePrediction() {
+        // ===== GENERAR MÚLTIPLES PREDICCIONES =====
+        function generateMultiplePredictions() {
             if (allLines.length === 0) return null;
 
+            const predictions = [];
+
+            // Predicción 1: Método tradicional (más frecuentes)
+            const pred1 = generateTraditionalPrediction();
+            predictions.push({
+                rank: 1,
+                line: pred1.line,
+                confidence: pred1.avgConf,
+                method: 'Frecuencia General',
+                analysis: `Basada en caracteres más frecuentes en todo el histórico`
+            });
+
+            // Predicción 2: Análisis de tendencia (últimas 5-10 líneas)
+            const pred2 = generateTrendPrediction();
+            predictions.push({
+                rank: 2,
+                line: pred2.line,
+                confidence: pred2.avgConf,
+                method: 'Tendencia Reciente',
+                analysis: `Basada en el comportamiento de las últimas líneas`
+            });
+
+            // Predicción 3: Análisis alternativo (segundo más frecuente)
+            const pred3 = generateAlternativePrediction();
+            predictions.push({
+                rank: 3,
+                line: pred3.line,
+                confidence: pred3.avgConf,
+                method: 'Opción Alternativa',
+                analysis: `Basada en caracteres alternativos y cambios de patrón`
+            });
+
+            return predictions;
+        }
+
+        // ===== PREDICCIÓN TRADICIONAL =====
+        function generateTraditionalPrediction() {
             const prediction = [];
             const confidences = [];
 
             for (let pos = 0; pos < 14; pos++) {
-                const stats = getPositionStats(pos);
-                const total = stats['1'] + stats['2'] + stats['X'];
-
-                let best = '1';
-                let bestCount = stats['1'];
-
-                if (stats['2'] > bestCount) {
-                    best = '2';
-                    bestCount = stats['2'];
-                }
-                if (stats['X'] > bestCount) {
-                    best = 'X';
-                    bestCount = stats['X'];
-                }
-
-                const confidence = total > 0 ? Math.round((bestCount / total) * 100) : 33;
+                const stats = getPositionStats(pos, allLines);
+                const { best, confidence } = getBestCharacter(stats);
                 prediction.push(best);
                 confidences.push(confidence);
             }
 
             const avgConf = Math.round(confidences.reduce((a, b) => a + b, 0) / 14);
-
             return {
                 line: prediction.join(''),
                 confidences: confidences,
-                averageConfidence: avgConf
+                avgConf: avgConf
             };
         }
 
+        // ===== PREDICCIÓN DE TENDENCIA =====
+        function generateTrendPrediction() {
+            const recentCount = Math.min(10, allLines.length);
+            const recentLines = allLines.slice(-recentCount);
+
+            const prediction = [];
+            const confidences = [];
+
+            for (let pos = 0; pos < 14; pos++) {
+                const recentStats = getPositionStats(pos, recentLines);
+                const allStats = getPositionStats(pos, allLines);
+
+                // Combinar: 60% reciente, 40% histórico
+                const combined = {
+                    '1': (recentStats['1'] * 0.6) + (allStats['1'] * 0.4),
+                    '2': (recentStats['2'] * 0.6) + (allStats['2'] * 0.4),
+                    'X': (recentStats['X'] * 0.6) + (allStats['X'] * 0.4)
+                };
+
+                const best = Object.keys(combined).reduce((a, b) => combined[a] > combined[b] ? a : b);
+                const total = combined['1'] + combined['2'] + combined['X'];
+                const confidence = Math.round((combined[best] / total) * 100);
+
+                prediction.push(best);
+                confidences.push(confidence);
+            }
+
+            const avgConf = Math.round(confidences.reduce((a, b) => a + b, 0) / 14);
+            return {
+                line: prediction.join(''),
+                confidences: confidences,
+                avgConf: avgConf
+            };
+        }
+
+        // ===== PREDICCIÓN ALTERNATIVA =====
+        function generateAlternativePrediction() {
+            const prediction = [];
+            const confidences = [];
+
+            for (let pos = 0; pos < 14; pos++) {
+                const stats = getPositionStats(pos, allLines);
+                const { alternative, confidence } = getSecondBestCharacter(stats);
+                prediction.push(alternative);
+                confidences.push(confidence);
+            }
+
+            const avgConf = Math.round(confidences.reduce((a, b) => a + b, 0) / 14);
+            return {
+                line: prediction.join(''),
+                confidences: confidences,
+                avgConf: avgConf
+            };
+        }
+
+        // ===== OBTENER MEJOR CARÁCTER =====
+        function getBestCharacter(stats) {
+            const total = stats['1'] + stats['2'] + stats['X'];
+            if (total === 0) return { best: '1', confidence: 33 };
+
+            const best = Object.keys(stats).reduce((a, b) => stats[a] > stats[b] ? a : b);
+            const confidence = Math.round((stats[best] / total) * 100);
+
+            return { best, confidence };
+        }
+
+        // ===== OBTENER SEGUNDO MEJOR CARÁCTER =====
+        function getSecondBestCharacter(stats) {
+            const total = stats['1'] + stats['2'] + stats['X'];
+            if (total === 0) return { alternative: 'X', confidence: 33 };
+
+            const sorted = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+            const alternative = sorted[1]?.[0] || '2';
+            const confidence = Math.round(((sorted[1]?.[1] || 0) / total) * 100);
+
+            return { alternative, confidence: Math.max(15, confidence) };
+        }
+
         // ===== ESTADÍSTICAS POR POSICIÓN =====
-        function getPositionStats(pos) {
+        function getPositionStats(pos, lines) {
             const stats = { '1': 0, '2': 0, 'X': 0 };
 
-            allLines.forEach(item => {
+            lines.forEach(item => {
                 const char = item.line[pos];
                 if (stats.hasOwnProperty(char)) stats[char]++;
             });
@@ -468,6 +632,7 @@
         function updateUI() {
             updateGeneralStats();
             updatePrediction();
+            updatePositionAnalysis();
             updateHistory();
             updateStats();
             updateCharts();
@@ -510,28 +675,67 @@
 
         function updatePrediction() {
             const div = document.getElementById('predictionDiv');
-            const pred = generatePrediction();
+            const predictions = generateMultiplePredictions();
 
-            if (!pred || allLines.length === 0) {
-                div.innerHTML = '<p style="color: #999;">Agrega líneas para generar predicción...</p>';
+            if (!predictions || allLines.length === 0) {
+                div.innerHTML = '<p style="color: #999;">Agrega líneas para generar predicciones...</p>';
                 return;
             }
 
-            let html = `
-                <div class="prediction-box">
-                    <div>📮 Predicción Siguiente Línea</div>
-                    <div class="prediction-line">${pred.line}</div>
-                    <div style="font-size: 1.1em; margin-top: 10px;">
-                        Confianza Promedio: <strong>${pred.averageConfidence}%</strong>
+            let html = '';
+            predictions.forEach(pred => {
+                const rankClass = `rank-${pred.rank}`;
+                html += `
+                    <div class="prediction-box">
+                        <div class="prediction-card ${rankClass}">
+                            <div style="font-size: 0.9em; opacity: 0.8;">🏆 ${pred.method}</div>
+                            <div class="prediction-line">${pred.line}</div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${pred.confidence}%">${pred.confidence}%</div>
+                            </div>
+                            <div class="analysis-text">${pred.analysis}</div>
+                        </div>
                     </div>
-                    <div style="font-size: 0.85em; margin-top: 15px; opacity: 0.9;">
-                        ${pred.confidences.map((c, i) => 
-                            `<span style="display:inline-block; margin: 3px 4px; padding: 4px 8px; background:rgba(255,255,255,0.2); border-radius:3px;">P${i+1}:${c}%</span>`
-                        ).join('')}
-                    </div>
-                </div>
-            `;
+                `;
+            });
 
+            div.innerHTML = html;
+        }
+
+        function updatePositionAnalysis() {
+            const div = document.getElementById('positionAnalysisDiv');
+            const predictions = generateMultiplePredictions();
+
+            if (!predictions || allLines.length === 0) {
+                div.innerHTML = '<p style="color: #999;">Sin datos</p>';
+                return;
+            }
+
+            let html = '<div class="position-analysis">';
+
+            for (let pos = 0; pos < 14; pos++) {
+                const stats = getPositionStats(pos, allLines);
+                const total = stats['1'] + stats['2'] + stats['X'];
+                const p1 = total > 0 ? ((stats['1'] / total) * 100).toFixed(0) : 0;
+                const p2 = total > 0 ? ((stats['2'] / total) * 100).toFixed(0) : 0;
+                const px = total > 0 ? ((stats['X'] / total) * 100).toFixed(0) : 0;
+
+                const pred1 = predictions[0].line[pos];
+                const pred2 = predictions[1].line[pos];
+                const pred3 = predictions[2].line[pos];
+
+                html += `
+                    <div class="pos-card">
+                        <div class="pos-title">P${pos + 1}</div>
+                        <div class="pos-options">
+                            <strong>${pred1}</strong>/${pred2}/${pred3}<br>
+                            1:${p1}% 2:${p2}% X:${px}%
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
             div.innerHTML = html;
         }
 
@@ -583,7 +787,7 @@
             let html = '<div style="overflow-x:auto;"><table><tr><th>Pos</th><th>1</th><th>2</th><th>X</th><th>Total</th></tr>';
 
             for (let pos = 0; pos < 14; pos++) {
-                const stats = getPositionStats(pos);
+                const stats = getPositionStats(pos, allLines);
                 const total = stats['1'] + stats['2'] + stats['X'];
                 const p1 = total > 0 ? ((stats['1'] / total) * 100).toFixed(0) : 0;
                 const p2 = total > 0 ? ((stats['2'] / total) * 100).toFixed(0) : 0;
@@ -608,6 +812,7 @@
             updateFrequencyChart();
             if (deviations.length > 0) {
                 updateDeviationsChart();
+                updateTrendChart();
             }
         }
 
@@ -622,7 +827,7 @@
 
             for (let i = 0; i < 14; i++) {
                 positions.push(`P${i + 1}`);
-                const stats = getPositionStats(i);
+                const stats = getPositionStats(i, allLines);
                 const total = stats['1'] + stats['2'] + stats['X'];
                 freq1.push(total > 0 ? ((stats['1'] / total) * 100).toFixed(1) : 0);
                 freq2.push(total > 0 ? ((stats['2'] / total) * 100).toFixed(1) : 0);
@@ -698,17 +903,78 @@
             });
         }
 
+        function updateTrendChart() {
+            const canvas = document.getElementById('trendCanvas');
+            if (!canvas || allLines.length < 2) return;
+
+            const recentCount = Math.min(15, allLines.length);
+            const recentLines = allLines.slice(-recentCount);
+            
+            const labels = recentLines.map((l, i) => `L${i + 1}`);
+            const trend1 = [];
+            const trend2 = [];
+            const trendX = [];
+
+            for (let i = 0; i < 14; i++) {
+                const stats = getPositionStats(i, recentLines);
+                const total = stats['1'] + stats['2'] + stats['X'];
+                trend1.push(total > 0 ? ((stats['1'] / total) * 100).toFixed(1) : 0);
+                trend2.push(total > 0 ? ((stats['2'] / total) * 100).toFixed(1) : 0);
+                trendX.push(total > 0 ? ((stats['X'] / total) * 100).toFixed(1) : 0);
+            }
+
+            if (charts.trend) charts.trend.destroy();
+
+            charts.trend = new Chart(canvas, {
+                type: 'radar',
+                data: {
+                    labels: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10', 'P11', 'P12', 'P13', 'P14'],
+                    datasets: [
+                        {
+                            label: 'Tendencia 1 (Reciente)',
+                            data: trend1,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.2)'
+                        },
+                        {
+                            label: 'Tendencia 2 (Reciente)',
+                            data: trend2,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.2)'
+                        },
+                        {
+                            label: 'Tendencia X (Reciente)',
+                            data: trendX,
+                            borderColor: '#f39c12',
+                            backgroundColor: 'rgba(243, 156, 18, 0.2)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        title: { display: true, text: 'Tendencia de Últimas Líneas por Posición' }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: v => v + '%' }
+                        }
+                    }
+                }
+            });
+        }
+
         function showChart(type) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.getElementById('frequencyChart').style.display = type === 'frequency' ? 'block' : 'none';
             document.getElementById('deviationsChart').style.display = type === 'deviations' ? 'block' : 'none';
+            document.getElementById('trendChart').style.display = type === 'trend' ? 'block' : 'none';
             setTimeout(() => {
-                if (type === 'frequency') {
-                    charts.frequency && charts.frequency.resize();
-                } else {
-                    charts.deviations && charts.deviations.resize();
-                }
+                if (charts[type]) charts[type].resize();
             }, 100);
         }
 
