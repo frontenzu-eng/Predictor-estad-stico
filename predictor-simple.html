@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictor ML - Simple</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #667eea;
+            color: #333;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #667eea;
+            margin: 20px 0 15px 0;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button.danger {
+            background: #e74c3c;
+        }
+
+        button.danger:hover {
+            background: #c0392b;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .prediction-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .prediction-line {
+            font-size: 1.5em;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+
+        .stat-bar {
+            background: #ddd;
+            height: 25px;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: width 0.3s;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            font-family: monospace;
+        }
+
+        tr:hover {
+            background: #f0f0f0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .success {
+            color: #27ae60;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .warning {
+            color: #f39c12;
+        }
+
+        button.secondary {
+            background: #2ecc71;
+        }
+
+        button.secondary:hover {
+            background: #27ae60;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Predictor ML - Versión Simple</h1>
+
+        <!-- ENTRADA DE DATOS -->
+        <div class="section">
+            <h2>📥 Entrada de Datos (Una o Múltiples Líneas)</h2>
+            
+            <label>📝 Pega líneas aquí (una por línea o separadas por espacios/saltos):</label>
+            <textarea id="linesToAdd" placeholder="Ejemplo:&#10;11122XX112X11&#10;22X112X211X122&#10;X12211X122X111"></textarea>
+            <button onclick="addMultipleLines()">➕ Agregar Líneas</button>
+            <button onclick="clearLines()" class="danger">🗑️ Limpiar Todo</button>
+        </div>
+
+        <!-- PREDICCIÓN -->
+        <div class="section">
+            <h2>🎯 Predicción Actual</h2>
+            <div id="predictionDiv"></div>
+        </div>
+
+        <!-- HISTÓRICO -->
+        <div class="section">
+            <h2>📋 Histórico de Líneas</h2>
+            <div id="historyDiv"></div>
+        </div>
+
+        <!-- ESTADÍSTICAS POR POSICIÓN -->
+        <div class="section">
+            <h2>📈 Estadísticas por Posición</h2>
+            <div id="statsDiv"></div>
+        </div>
+
+        <!-- GRÁFICOS -->
+        <div class="section">
+            <h2>📊 Análisis Gráfico</h2>
+            <button onclick="toggleChart('frequency')">Frecuencia por Posición</button>
+            <button onclick="toggleChart('deviations')">Desvíos Históricos</button>
+            <div class="chart-container" id="frequencyChart" style="display:block;">
+                <canvas id="freqCanvas"></canvas>
+            </div>
+            <div class="chart-container" id="deviationsChart" style="display:none;">
+                <canvas id="devCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- REGISTRO REAL -->
+        <div class="section">
+            <h2>✅ Registrar Línea Real</h2>
+            <label>Ingresa la línea real que salió:</label>
+            <input type="text" id="realLine" placeholder="Ej: X22X1X1XX12X22" maxlength="14">
+            <button onclick="registerReal()" class="secondary">✅ Registrar Real</button>
+        </div>
+
+        <!-- EXPORTAR -->
+        <div class="section">
+            <h2>💾 Exportar/Importar Datos</h2>
+            <button onclick="exportJSON()">💾 Descargar JSON</button>
+            <button onclick="document.getElementById('importFile').click()">📂 Cargar JSON</button>
+            <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importJSON(event)">
+        </div>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // DATOS EN MEMORIA (sin localStorage)
+        let lines = [];
+        let deviations = [];
+        let charts = {};
+
+        // ===== VALIDAR LÍNEA =====
+        function isValidLine(line) {
+            if (!line || line.length !== 14) return false;
+            return /^[1|2|X]{14}$/i.test(line);
+        }
+
+        // ===== AGREGAR MÚLTIPLES LÍNEAS =====
+        function addMultipleLines() {
+            const input = document.getElementById('linesToAdd').value.trim();
+            if (!input) {
+                showMessage('Por favor ingresa líneas', 'error');
+                return;
+            }
+
+            // Separar por saltos de línea, espacios o comas
+            const rawLines = input.split(/[\s,]+/).filter(l => l.length === 14);
+            
+            if (rawLines.length === 0) {
+                showMessage('No encontré líneas válidas de 14 caracteres', 'error');
+                return;
+            }
+
+            let added = 0;
+            rawLines.forEach(line => {
+                if (isValidLine(line)) {
+                    lines.push({
+                        id: lines.length + 1,
+                        line: line.toUpperCase(),
+                        real: null,
+                        prediction: null,
+                        deviation: null
+                    });
+                    added++;
+                }
+            });
+
+            showMessage(`✅ Se agregaron ${added} líneas de ${rawLines.length}`, 'success');
+            document.getElementById('linesToAdd').value = '';
+            updateUI();
+        }
+
+        // ===== REGISTRAR LÍNEA REAL =====
+        function registerReal() {
+            const input = document.getElementById('realLine').value.trim().toUpperCase();
+            if (!isValidLine(input)) {
+                showMessage('Línea real inválida', 'error');
+                return;
+            }
+
+            if (lines.length === 0) {
+                showMessage('Agrega primero líneas predichas', 'error');
+                return;
+            }
+
+            // Registrar en la última línea
+            const lastIdx = lines.length - 1;
+            lines[lastIdx].real = input;
+
+            // Calcular desvío si existe predicción
+            if (lines[lastIdx].prediction) {
+                let matches = 0;
+                for (let i = 0; i < 14; i++) {
+                    if (lines[lastIdx].prediction[i] === input[i]) matches++;
+                }
+                lines[lastIdx].deviation = Math.round((matches / 14) * 100);
+                deviations.push(lines[lastIdx].deviation);
+            }
+
+            showMessage('✅ Línea real registrada', 'success');
+            document.getElementById('realLine').value = '';
+            updateUI();
+        }
+
+        // ===== GENERAR PREDICCIÓN =====
+        function generatePrediction() {
+            if (lines.length === 0) return null;
+
+            const prediction = [];
+            for (let pos = 0; pos < 14; pos++) {
+                const stats = getPositionStats(pos);
+                const best = Math.max(
+                    stats['1'] || 0,
+                    stats['2'] || 0,
+                    stats['X'] || 0
+                );
+                
+                if (stats['1'] === best) prediction.push('1');
+                else if (stats['2'] === best) prediction.push('2');
+                else prediction.push('X');
+            }
+
+            return prediction.join('');
+        }
+
+        // ===== ESTADÍSTICAS POR POSICIÓN =====
+        function getPositionStats(pos) {
+            const stats = { '1': 0, '2': 0, 'X': 0 };
+            
+            lines.forEach(line => {
+                const char = (line.real || line.line)[pos];
+                if (stats.hasOwnProperty(char)) stats[char]++;
+            });
+
+            return stats;
+        }
+
+        // ===== ACTUALIZAR INTERFAZ =====
+        function updateUI() {
+            updatePrediction();
+            updateHistory();
+            updateStats();
+            updateCharts();
+        }
+
+        function updatePrediction() {
+            const div = document.getElementById('predictionDiv');
+            const pred = generatePrediction();
+
+            if (!pred || lines.length === 0) {
+                div.innerHTML = '<p style="color: #999;">Agrega líneas para generar predicción...</p>';
+                return;
+            }
+
+            // Calcular confianza
+            let totalConf = 0;
+            let positions = [];
+            for (let pos = 0; pos < 14; pos++) {
+                const stats = getPositionStats(pos);
+                const total = stats['1'] + stats['2'] + stats['X'];
+                const conf = total > 0 ? Math.round((Math.max(stats['1'], stats['2'], stats['X']) / total) * 100) : 50;
+                totalConf += conf;
+                positions.push({ pos: pos + 1, conf });
+            }
+            const avgConf = Math.round(totalConf / 14);
+
+            let html = `
+                <div class="prediction-box">
+                    <div>📮 Predicción para Siguiente Línea</div>
+                    <div class="prediction-line">${pred}</div>
+                    <div>Confianza Promedio: <strong>${avgConf}%</strong></div>
+                    <div style="font-size: 0.9em; margin-top: 10px;">
+                        ${positions.map(p => `<span style="display:inline-block; margin: 3px 5px; padding: 5px; background:rgba(255,255,255,0.2); border-radius:3px;">P${p.pos}:${p.conf}%</span>`).join('')}
+                    </div>
+                </div>
+            `;
+
+            div.innerHTML = html;
+        }
+
+        function updateHistory() {
+            const div = document.getElementById('historyDiv');
+            if (lines.length === 0) {
+                div.innerHTML = '<p style="color: #999;">Sin datos</p>';
+                return;
+            }
+
+            let html = `
+                <p><strong>Total de líneas: ${lines.length}</strong></p>
+                <table>
+                    <tr>
+                        <th>#</th>
+                        <th>Línea</th>
+                        <th>Real</th>
+                        <th>Desvío %</th>
+                    </tr>
+            `;
+
+            lines.forEach((line, idx) => {
+                const devClass = line.deviation >= 70 ? 'success' : line.deviation ? 'error' : '';
+                html += `
+                    <tr>
+                        <td>${line.id}</td>
+                        <td>${line.line}</td>
+                        <td>${line.real || '-'}</td>
+                        <td class="${devClass}">${line.deviation !== null ? line.deviation + '%' : '-'}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</table>';
+            div.innerHTML = html;
+        }
+
+        function updateStats() {
+            const div = document.getElementById('statsDiv');
+            if (lines.length === 0) {
+                div.innerHTML = '<p style="color: #999;">Sin datos</p>';
+                return;
+            }
+
+            let html = '<div style="overflow-x:auto;"><table><tr><th>Pos</th><th>1</th><th>2</th><th>X</th></tr>';
+
+            for (let pos = 0; pos < 14; pos++) {
+                const stats = getPositionStats(pos);
+                const total = stats['1'] + stats['2'] + stats['X'];
+                const p1 = total > 0 ? ((stats['1'] / total) * 100).toFixed(0) : 0;
+                const p2 = total > 0 ? ((stats['2'] / total) * 100).toFixed(0) : 0;
+                const px = total > 0 ? ((stats['X'] / total) * 100).toFixed(0) : 0;
+
+                html += `
+                    <tr>
+                        <td><strong>P${pos + 1}</strong></td>
+                        <td>${stats['1']} (${p1}%)</td>
+                        <td>${stats['2']} (${p2}%)</td>
+                        <td>${stats['X']} (${px}%)</td>
+                    </tr>
+                `;
+            }
+
+            html += '</table></div>';
+            div.innerHTML = html;
+        }
+
+        function updateCharts() {
+            updateFrequencyChart();
+            updateDeviationsChart();
+        }
+
+        function updateFrequencyChart() {
+            const canvas = document.getElementById('freqCanvas');
+            if (!canvas) return;
+
+            const positions = [];
+            const freq1 = [];
+            const freq2 = [];
+            const freqX = [];
+
+            for (let i = 0; i < 14; i++) {
+                positions.push(`P${i + 1}`);
+                const stats = getPositionStats(i);
+                const total = stats['1'] + stats['2'] + stats['X'];
+                freq1.push(total > 0 ? ((stats['1'] / total) * 100).toFixed(1) : 0);
+                freq2.push(total > 0 ? ((stats['2'] / total) * 100).toFixed(1) : 0);
+                freqX.push(total > 0 ? ((stats['X'] / total) * 100).toFixed(1) : 0);
+            }
+
+            if (charts.frequency) charts.frequency.destroy();
+
+            charts.frequency = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: positions,
+                    datasets: [
+                        { label: 'Frecuencia 1', data: freq1, backgroundColor: '#3498db' },
+                        { label: 'Frecuencia 2', data: freq2, backgroundColor: '#e74c3c' },
+                        { label: 'Frecuencia X', data: freqX, backgroundColor: '#f39c12' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function updateDeviationsChart() {
+            const canvas = document.getElementById('devCanvas');
+            if (!canvas || deviations.length === 0) return;
+
+            const labels = deviations.map((_, i) => `L${i + 1}`);
+
+            if (charts.deviations) charts.deviations.destroy();
+
+            charts.deviations = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Desvío %',
+                        data: deviations,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+
+        function toggleChart(type) {
+            document.getElementById('frequencyChart').style.display = type === 'frequency' ? 'block' : 'none';
+            document.getElementById('deviationsChart').style.display = type === 'deviations' ? 'block' : 'none';
+        }
+
+        function clearLines() {
+            if (confirm('¿Eliminar todos los datos?')) {
+                lines = [];
+                deviations = [];
+                document.getElementById('linesToAdd').value = '';
+                document.getElementById('realLine').value = '';
+                updateUI();
+                showMessage('✅ Datos eliminados', 'success');
+            }
+        }
+
+        function exportJSON() {
+            const data = {
+                lines: lines,
+                deviations: deviations,
+                exportDate: new Date().toLocaleString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `predictor-${Date.now()}.json`;
+            a.click();
+            showMessage('✅ JSON descargado', 'success');
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    lines = data.lines || [];
+                    deviations = data.deviations || [];
+                    updateUI();
+                    showMessage('✅ JSON importado correctamente', 'success');
+                } catch (err) {
+                    showMessage('❌ Error al importar JSON', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function showMessage(msg, type) {
+            const div = document.getElementById('message');
+            div.innerHTML = `<div class="info-box ${type}" style="margin-top: 20px;">${msg}</div>`;
+            setTimeout(() => { div.innerHTML = ''; }, 3000);
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+        });
+    </script>
+</body>
+</html>
