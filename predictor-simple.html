@@ -30,8 +30,15 @@
 
         h1 {
             color: #667eea;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 20px;
+            font-size: 0.9em;
         }
 
         h2 {
@@ -54,6 +61,7 @@
             font-weight: bold;
             margin-bottom: 5px;
             color: #333;
+            font-size: 0.95em;
         }
 
         input, textarea {
@@ -73,7 +81,7 @@
         }
 
         textarea {
-            min-height: 100px;
+            min-height: 80px;
             resize: vertical;
         }
 
@@ -102,17 +110,12 @@
             background: #c0392b;
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+        button.secondary {
+            background: #2ecc71;
         }
 
-        @media (max-width: 768px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
+        button.secondary:hover {
+            background: #27ae60;
         }
 
         .prediction-box {
@@ -132,43 +135,22 @@
             font-family: monospace;
         }
 
-        .stat-bar {
-            background: #ddd;
-            height: 25px;
-            border-radius: 5px;
-            margin: 10px 0;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .stat-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: width 0.3s;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            font-size: 0.9em;
         }
 
         th {
             background: #667eea;
             color: white;
-            padding: 12px;
+            padding: 10px;
             text-align: left;
         }
 
         td {
-            padding: 10px;
+            padding: 8px;
             border-bottom: 1px solid #ddd;
             font-family: monospace;
         }
@@ -179,8 +161,30 @@
 
         .chart-container {
             position: relative;
-            height: 300px;
+            height: 350px;
             margin: 20px 0;
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: #ddd;
+            color: #333;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
         }
 
         .info-box {
@@ -189,6 +193,7 @@
             border-left: 4px solid #667eea;
             border-radius: 5px;
             margin: 15px 0;
+            font-size: 0.95em;
         }
 
         .success {
@@ -199,37 +204,67 @@
             color: #e74c3c;
         }
 
-        .warning {
-            color: #f39c12;
-        }
-
-        button.secondary {
-            background: #2ecc71;
-        }
-
-        button.secondary:hover {
-            background: #27ae60;
-        }
-
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
             gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #5568d3);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85em;
+        }
+
+        .stat-number {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📊 Predictor ML - Versión Simple</h1>
+        <h1>📊 Predictor ML - Análisis Estadístico</h1>
+        <p class="subtitle">Sistema de predicción y análisis de desviaciones</p>
 
-        <!-- ENTRADA DE DATOS -->
+        <!-- ENTRADA HISTÓRICO -->
         <div class="section">
-            <h2>📥 Entrada de Datos (Una o Múltiples Líneas)</h2>
-            
-            <label>📝 Pega líneas aquí (una por línea o separadas por espacios/saltos):</label>
-            <textarea id="linesToAdd" placeholder="Ejemplo:&#10;11122XX112X11&#10;22X112X211X122&#10;X12211X122X111"></textarea>
-            <button onclick="addMultipleLines()">➕ Agregar Líneas</button>
-            <button onclick="clearLines()" class="danger">🗑️ Limpiar Todo</button>
+            <h2>📥 Agregar Líneas Históricas</h2>
+            <label>Pega líneas históricas (una por línea, 14 caracteres cada una):</label>
+            <textarea id="historicLines" placeholder="Ejemplo:&#10;11122XX112X11&#10;22X112X211X122&#10;X12211X122X111&#10;(Puedes pegar 50, 100 o las que necesites)"></textarea>
+            <button onclick="addHistoricLines()">➕ Agregar Líneas Históricas</button>
+            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">💡 Estas serán el histórico base para calcular estadísticas y predicciones.</p>
+        </div>
+
+        <!-- ENTRADA REALES NUEVAS -->
+        <div class="section">
+            <h2>✅ Registrar Nuevas Líneas Reales (para comparativa)</h2>
+            <label>Pega las nuevas líneas reales que salieron (una por línea):</label>
+            <textarea id="newRealLines" placeholder="Ejemplo:&#10;X22X1X1XX12X22&#10;1X112XX1121X11&#10;(Estas se compararán con las predicciones)"></textarea>
+            <button onclick="addNewRealLines()" class="secondary">✅ Registrar Nuevas Reales</button>
+            <p style="font-size: 0.85em; color: #666; margin-top: 10px;">💡 Se calcularán los desvíos comparando con las predicciones generadas.</p>
         </div>
 
         <!-- PREDICCIÓN -->
@@ -238,156 +273,191 @@
             <div id="predictionDiv"></div>
         </div>
 
-        <!-- HISTÓRICO -->
+        <!-- ESTADÍSTICAS -->
         <div class="section">
-            <h2>📋 Histórico de Líneas</h2>
+            <h2>📈 Estadísticas Generales</h2>
+            <div id="generalStatsDiv"></div>
+        </div>
+
+        <!-- HISTÓRICO UNIFICADO -->
+        <div class="section">
+            <h2>📋 Histórico Completo de Líneas</h2>
             <div id="historyDiv"></div>
         </div>
 
         <!-- ESTADÍSTICAS POR POSICIÓN -->
         <div class="section">
-            <h2>📈 Estadísticas por Posición</h2>
+            <h2>📊 Frecuencia por Posición (1-14)</h2>
             <div id="statsDiv"></div>
         </div>
 
         <!-- GRÁFICOS -->
         <div class="section">
-            <h2>📊 Análisis Gráfico</h2>
-            <button onclick="toggleChart('frequency')">Frecuencia por Posición</button>
-            <button onclick="toggleChart('deviations')">Desvíos Históricos</button>
+            <h2>📈 Análisis Gráfico</h2>
+            <div class="chart-tabs">
+                <button class="tab-btn active" onclick="showChart('frequency')">📊 Frecuencia por Posición</button>
+                <button class="tab-btn" onclick="showChart('deviations')">📉 Desvíos Históricos</button>
+            </div>
+            
             <div class="chart-container" id="frequencyChart" style="display:block;">
                 <canvas id="freqCanvas"></canvas>
             </div>
+            
             <div class="chart-container" id="deviationsChart" style="display:none;">
                 <canvas id="devCanvas"></canvas>
             </div>
         </div>
 
-        <!-- REGISTRO REAL -->
-        <div class="section">
-            <h2>✅ Registrar Línea Real</h2>
-            <label>Ingresa la línea real que salió:</label>
-            <input type="text" id="realLine" placeholder="Ej: X22X1X1XX12X22" maxlength="14">
-            <button onclick="registerReal()" class="secondary">✅ Registrar Real</button>
-        </div>
-
         <!-- EXPORTAR -->
         <div class="section">
-            <h2>💾 Exportar/Importar Datos</h2>
+            <h2>💾 Exportar/Importar</h2>
             <button onclick="exportJSON()">💾 Descargar JSON</button>
             <button onclick="document.getElementById('importFile').click()">📂 Cargar JSON</button>
             <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importJSON(event)">
+            <button onclick="clearAll()" class="danger">🗑️ Limpiar Todo</button>
         </div>
 
         <div id="message"></div>
     </div>
 
     <script>
-        // DATOS EN MEMORIA (sin localStorage)
-        let lines = [];
-        let deviations = [];
+        // DATOS UNIFICADOS
+        let allLines = []; // Todas las líneas (históricas + nuevas reales)
+        let deviations = []; // Desvíos calculados
         let charts = {};
 
         // ===== VALIDAR LÍNEA =====
         function isValidLine(line) {
             if (!line || line.length !== 14) return false;
-            return /^[1|2|X]{14}$/i.test(line);
+            return /^[1|2|X]{14}$/i.test(line.toUpperCase());
         }
 
-        // ===== AGREGAR MÚLTIPLES LÍNEAS =====
-        function addMultipleLines() {
-            const input = document.getElementById('linesToAdd').value.trim();
-            if (!input) {
-                showMessage('Por favor ingresa líneas', 'error');
+        // ===== EXTRAER LÍNEAS DEL TEXTAREA =====
+        function extractLines(text) {
+            // Separar por saltos de línea y espacios
+            return text
+                .split(/[\n\r]+/)
+                .map(l => l.trim().toUpperCase())
+                .filter(l => isValidLine(l));
+        }
+
+        // ===== AGREGAR LÍNEAS HISTÓRICAS =====
+        function addHistoricLines() {
+            const text = document.getElementById('historicLines').value.trim();
+            if (!text) {
+                showMessage('Por favor pega líneas históricas', 'error');
                 return;
             }
 
-            // Separar por saltos de línea, espacios o comas
-            const rawLines = input.split(/[\s,]+/).filter(l => l.length === 14);
-            
-            if (rawLines.length === 0) {
-                showMessage('No encontré líneas válidas de 14 caracteres', 'error');
+            const newLines = extractLines(text);
+            if (newLines.length === 0) {
+                showMessage('No encontré líneas válidas (deben tener 14 caracteres)', 'error');
                 return;
             }
 
-            let added = 0;
-            rawLines.forEach(line => {
-                if (isValidLine(line)) {
-                    lines.push({
-                        id: lines.length + 1,
-                        line: line.toUpperCase(),
-                        real: null,
-                        prediction: null,
-                        deviation: null
-                    });
-                    added++;
-                }
+            newLines.forEach(line => {
+                allLines.push({
+                    id: allLines.length + 1,
+                    line: line,
+                    type: 'historic',
+                    timestamp: new Date().toLocaleTimeString()
+                });
             });
 
-            showMessage(`✅ Se agregaron ${added} líneas de ${rawLines.length}`, 'success');
-            document.getElementById('linesToAdd').value = '';
+            showMessage(`✅ Se agregaron ${newLines.length} líneas históricas. Total: ${allLines.length}`, 'success');
+            document.getElementById('historicLines').value = '';
             updateUI();
         }
 
-        // ===== REGISTRAR LÍNEA REAL =====
-        function registerReal() {
-            const input = document.getElementById('realLine').value.trim().toUpperCase();
-            if (!isValidLine(input)) {
-                showMessage('Línea real inválida', 'error');
+        // ===== AGREGAR NUEVAS LÍNEAS REALES =====
+        function addNewRealLines() {
+            const text = document.getElementById('newRealLines').value.trim();
+            if (!text) {
+                showMessage('Por favor pega líneas reales nuevas', 'error');
                 return;
             }
 
-            if (lines.length === 0) {
-                showMessage('Agrega primero líneas predichas', 'error');
+            const newLines = extractLines(text);
+            if (newLines.length === 0) {
+                showMessage('No encontré líneas válidas', 'error');
                 return;
             }
 
-            // Registrar en la última línea
-            const lastIdx = lines.length - 1;
-            lines[lastIdx].real = input;
+            newLines.forEach(line => {
+                allLines.push({
+                    id: allLines.length + 1,
+                    line: line,
+                    type: 'real',
+                    timestamp: new Date().toLocaleTimeString()
+                });
 
-            // Calcular desvío si existe predicción
-            if (lines[lastIdx].prediction) {
-                let matches = 0;
-                for (let i = 0; i < 14; i++) {
-                    if (lines[lastIdx].prediction[i] === input[i]) matches++;
+                // Calcular desvío si hay al menos una línea anterior
+                if (allLines.length > 1) {
+                    const lastHistoric = allLines.slice(0, -1).reverse().find(l => l.type === 'historic');
+                    if (lastHistoric) {
+                        let matches = 0;
+                        for (let i = 0; i < 14; i++) {
+                            if (lastHistoric.line[i] === line[i]) matches++;
+                        }
+                        const deviation = Math.round((matches / 14) * 100);
+                        deviations.push({
+                            lineId: allLines.length - 1,
+                            deviation: deviation,
+                            predicted: lastHistoric.line,
+                            real: line
+                        });
+                    }
                 }
-                lines[lastIdx].deviation = Math.round((matches / 14) * 100);
-                deviations.push(lines[lastIdx].deviation);
-            }
+            });
 
-            showMessage('✅ Línea real registrada', 'success');
-            document.getElementById('realLine').value = '';
+            showMessage(`✅ Se agregaron ${newLines.length} líneas reales. Total: ${allLines.length}`, 'success');
+            document.getElementById('newRealLines').value = '';
             updateUI();
         }
 
         // ===== GENERAR PREDICCIÓN =====
         function generatePrediction() {
-            if (lines.length === 0) return null;
+            if (allLines.length === 0) return null;
 
             const prediction = [];
+            const confidences = [];
+
             for (let pos = 0; pos < 14; pos++) {
                 const stats = getPositionStats(pos);
-                const best = Math.max(
-                    stats['1'] || 0,
-                    stats['2'] || 0,
-                    stats['X'] || 0
-                );
-                
-                if (stats['1'] === best) prediction.push('1');
-                else if (stats['2'] === best) prediction.push('2');
-                else prediction.push('X');
+                const total = stats['1'] + stats['2'] + stats['X'];
+
+                let best = '1';
+                let bestCount = stats['1'];
+
+                if (stats['2'] > bestCount) {
+                    best = '2';
+                    bestCount = stats['2'];
+                }
+                if (stats['X'] > bestCount) {
+                    best = 'X';
+                    bestCount = stats['X'];
+                }
+
+                const confidence = total > 0 ? Math.round((bestCount / total) * 100) : 33;
+                prediction.push(best);
+                confidences.push(confidence);
             }
 
-            return prediction.join('');
+            const avgConf = Math.round(confidences.reduce((a, b) => a + b, 0) / 14);
+
+            return {
+                line: prediction.join(''),
+                confidences: confidences,
+                averageConfidence: avgConf
+            };
         }
 
         // ===== ESTADÍSTICAS POR POSICIÓN =====
         function getPositionStats(pos) {
             const stats = { '1': 0, '2': 0, 'X': 0 };
-            
-            lines.forEach(line => {
-                const char = (line.real || line.line)[pos];
+
+            allLines.forEach(item => {
+                const char = item.line[pos];
                 if (stats.hasOwnProperty(char)) stats[char]++;
             });
 
@@ -396,40 +466,68 @@
 
         // ===== ACTUALIZAR INTERFAZ =====
         function updateUI() {
+            updateGeneralStats();
             updatePrediction();
             updateHistory();
             updateStats();
             updateCharts();
         }
 
+        function updateGeneralStats() {
+            const div = document.getElementById('generalStatsDiv');
+            const totalLines = allLines.length;
+            const historicLines = allLines.filter(l => l.type === 'historic').length;
+            const realLines = allLines.filter(l => l.type === 'real').length;
+            const totalDeviations = deviations.length;
+            const avgDeviation = deviations.length > 0 ? 
+                Math.round(deviations.reduce((sum, d) => sum + d.deviation, 0) / deviations.length) : 0;
+
+            div.innerHTML = `
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Líneas</div>
+                        <div class="stat-number">${totalLines}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Históricas</div>
+                        <div class="stat-number">${historicLines}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Reales</div>
+                        <div class="stat-number">${realLines}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Desvíos</div>
+                        <div class="stat-number">${totalDeviations}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Desvío Promedio</div>
+                        <div class="stat-number">${avgDeviation}%</div>
+                    </div>
+                </div>
+            `;
+        }
+
         function updatePrediction() {
             const div = document.getElementById('predictionDiv');
             const pred = generatePrediction();
 
-            if (!pred || lines.length === 0) {
+            if (!pred || allLines.length === 0) {
                 div.innerHTML = '<p style="color: #999;">Agrega líneas para generar predicción...</p>';
                 return;
             }
 
-            // Calcular confianza
-            let totalConf = 0;
-            let positions = [];
-            for (let pos = 0; pos < 14; pos++) {
-                const stats = getPositionStats(pos);
-                const total = stats['1'] + stats['2'] + stats['X'];
-                const conf = total > 0 ? Math.round((Math.max(stats['1'], stats['2'], stats['X']) / total) * 100) : 50;
-                totalConf += conf;
-                positions.push({ pos: pos + 1, conf });
-            }
-            const avgConf = Math.round(totalConf / 14);
-
             let html = `
                 <div class="prediction-box">
-                    <div>📮 Predicción para Siguiente Línea</div>
-                    <div class="prediction-line">${pred}</div>
-                    <div>Confianza Promedio: <strong>${avgConf}%</strong></div>
-                    <div style="font-size: 0.9em; margin-top: 10px;">
-                        ${positions.map(p => `<span style="display:inline-block; margin: 3px 5px; padding: 5px; background:rgba(255,255,255,0.2); border-radius:3px;">P${p.pos}:${p.conf}%</span>`).join('')}
+                    <div>📮 Predicción Siguiente Línea</div>
+                    <div class="prediction-line">${pred.line}</div>
+                    <div style="font-size: 1.1em; margin-top: 10px;">
+                        Confianza Promedio: <strong>${pred.averageConfidence}%</strong>
+                    </div>
+                    <div style="font-size: 0.85em; margin-top: 15px; opacity: 0.9;">
+                        ${pred.confidences.map((c, i) => 
+                            `<span style="display:inline-block; margin: 3px 4px; padding: 4px 8px; background:rgba(255,255,255,0.2); border-radius:3px;">P${i+1}:${c}%</span>`
+                        ).join('')}
                     </div>
                 </div>
             `;
@@ -439,30 +537,34 @@
 
         function updateHistory() {
             const div = document.getElementById('historyDiv');
-            if (lines.length === 0) {
+            if (allLines.length === 0) {
                 div.innerHTML = '<p style="color: #999;">Sin datos</p>';
                 return;
             }
 
             let html = `
-                <p><strong>Total de líneas: ${lines.length}</strong></p>
+                <p><strong>Total de líneas: ${allLines.length}</strong></p>
                 <table>
                     <tr>
                         <th>#</th>
                         <th>Línea</th>
-                        <th>Real</th>
+                        <th>Tipo</th>
                         <th>Desvío %</th>
                     </tr>
             `;
 
-            lines.forEach((line, idx) => {
-                const devClass = line.deviation >= 70 ? 'success' : line.deviation ? 'error' : '';
+            allLines.forEach((line, idx) => {
+                const devInfo = deviations.find(d => d.lineId === idx);
+                const devValue = devInfo ? devInfo.deviation : '-';
+                const devClass = devInfo && devInfo.deviation >= 70 ? 'success' : devInfo ? 'error' : '';
+                const typeLabel = line.type === 'historic' ? '📊 Histórica' : '✅ Real';
+
                 html += `
                     <tr>
                         <td>${line.id}</td>
                         <td>${line.line}</td>
-                        <td>${line.real || '-'}</td>
-                        <td class="${devClass}">${line.deviation !== null ? line.deviation + '%' : '-'}</td>
+                        <td>${typeLabel}</td>
+                        <td class="${devClass}">${devValue}${devValue !== '-' ? '%' : ''}</td>
                     </tr>
                 `;
             });
@@ -473,12 +575,12 @@
 
         function updateStats() {
             const div = document.getElementById('statsDiv');
-            if (lines.length === 0) {
+            if (allLines.length === 0) {
                 div.innerHTML = '<p style="color: #999;">Sin datos</p>';
                 return;
             }
 
-            let html = '<div style="overflow-x:auto;"><table><tr><th>Pos</th><th>1</th><th>2</th><th>X</th></tr>';
+            let html = '<div style="overflow-x:auto;"><table><tr><th>Pos</th><th>1</th><th>2</th><th>X</th><th>Total</th></tr>';
 
             for (let pos = 0; pos < 14; pos++) {
                 const stats = getPositionStats(pos);
@@ -493,6 +595,7 @@
                         <td>${stats['1']} (${p1}%)</td>
                         <td>${stats['2']} (${p2}%)</td>
                         <td>${stats['X']} (${px}%)</td>
+                        <td>${total}</td>
                     </tr>
                 `;
             }
@@ -503,7 +606,9 @@
 
         function updateCharts() {
             updateFrequencyChart();
-            updateDeviationsChart();
+            if (deviations.length > 0) {
+                updateDeviationsChart();
+            }
         }
 
         function updateFrequencyChart() {
@@ -539,7 +644,13 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
+                    plugins: { 
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Frecuencia de Caracteres por Posición' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }
+                    }
                 }
             });
         }
@@ -548,7 +659,8 @@
             const canvas = document.getElementById('devCanvas');
             if (!canvas || deviations.length === 0) return;
 
-            const labels = deviations.map((_, i) => `L${i + 1}`);
+            const labels = deviations.map((d, i) => `D${i + 1}`);
+            const devData = deviations.map(d => d.deviation);
 
             if (charts.deviations) charts.deviations.destroy();
 
@@ -558,41 +670,51 @@
                     labels: labels,
                     datasets: [{
                         label: 'Desvío %',
-                        data: deviations,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 2,
+                        data: devData,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 3,
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#e74c3c'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, max: 100 } }
+                    plugins: { 
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Evolución de Desvíos (Predicción vs Real)' }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            ticks: { callback: v => v + '%' }
+                        } 
+                    }
                 }
             });
         }
 
-        function toggleChart(type) {
+        function showChart(type) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
             document.getElementById('frequencyChart').style.display = type === 'frequency' ? 'block' : 'none';
             document.getElementById('deviationsChart').style.display = type === 'deviations' ? 'block' : 'none';
-        }
-
-        function clearLines() {
-            if (confirm('¿Eliminar todos los datos?')) {
-                lines = [];
-                deviations = [];
-                document.getElementById('linesToAdd').value = '';
-                document.getElementById('realLine').value = '';
-                updateUI();
-                showMessage('✅ Datos eliminados', 'success');
-            }
+            setTimeout(() => {
+                if (type === 'frequency') {
+                    charts.frequency && charts.frequency.resize();
+                } else {
+                    charts.deviations && charts.deviations.resize();
+                }
+            }, 100);
         }
 
         function exportJSON() {
             const data = {
-                lines: lines,
+                allLines: allLines,
                 deviations: deviations,
                 exportDate: new Date().toLocaleString()
             };
@@ -611,7 +733,7 @@
             reader.onload = (e) => {
                 try {
                     const data = JSON.parse(e.target.result);
-                    lines = data.lines || [];
+                    allLines = data.allLines || [];
                     deviations = data.deviations || [];
                     updateUI();
                     showMessage('✅ JSON importado correctamente', 'success');
@@ -622,10 +744,21 @@
             reader.readAsText(file);
         }
 
+        function clearAll() {
+            if (confirm('⚠️ ¿Estás seguro? Se eliminarán todos los datos.')) {
+                allLines = [];
+                deviations = [];
+                document.getElementById('historicLines').value = '';
+                document.getElementById('newRealLines').value = '';
+                updateUI();
+                showMessage('✅ Datos eliminados', 'success');
+            }
+        }
+
         function showMessage(msg, type) {
             const div = document.getElementById('message');
-            div.innerHTML = `<div class="info-box ${type}" style="margin-top: 20px;">${msg}</div>`;
-            setTimeout(() => { div.innerHTML = ''; }, 3000);
+            div.innerHTML = `<div class="info-box ${type}">${msg}</div>`;
+            setTimeout(() => { div.innerHTML = ''; }, 4000);
         }
 
         // Inicializar
